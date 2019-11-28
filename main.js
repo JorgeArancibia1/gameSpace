@@ -62,11 +62,27 @@ function agregarEventosTeclado() {
   }
 }
 
+function moverNave() {
+  //MOVIMIENTO A LA IZQUIERDA
+  if (teclado[37]) { //Si la tecla con keyCode 37 "flecha a la izquierda" es actualizada, se actualiza la posición de la nave.
+    nave.x -= 6; // A la posición que tenga le vamos a quitar 10.
+    if (nave.x < 0) nave.x = 0; // Para que no se salga del rango.
+  }
+  //MOVIMIENTO A LA DERECHA
+  if (teclado[39]) { //Si la tecla con keyCode 37 "flecha a la derecha" es actualizada, se actualiza la posición de la nave.
+    var limite = canvas.width - nave.width;
+    nave.x += 6; // A la posición que tenga le vamos a quitar 10.
+    if (nave.x > limite) nave.x = limite; // Para que no se salga del rango.
+  }
+}
+
 //Se encarga de actualizar todas las posiciones de los jugadores y va a redibujar cada
 // uno de los elementos del juego para el movimiento, además de dibujar el background.
 function frameLoop() {
- dibujarFondo();
- dibujarNave();
+  //Para actualizar la nave cada vez que se ejecuta un nuevo frame.
+  moverNave();
+  dibujarFondo();
+  dibujarNave();
 }
 
 
