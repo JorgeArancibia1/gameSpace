@@ -4,6 +4,12 @@ var ctx = canvas.getContext('2d');
 //IMAGENES
 var fondo;
 
+//CREAMOS OBJETO TECLADO VACÍO.
+var teclado = {};
+//ARRAY PARA LOS DISPAROS.
+var disparos = [];
+//ARREGLO PARA ENEMIGOS.
+var enemigos = [];
 
 
 // CREAR EL OBJETO DE LA NAVE
@@ -13,11 +19,10 @@ var fondo;
    width: 50,
    height: 50
  }
- //CREAMOS OBJETO TECLADO VACÍO.
-var teclado = {};
-//ARRAY PARA LOS DISPAROS.
-var disparos =[];
-
+ 
+var juego = {
+  estado: 'iniciando'
+}
 
 // Trae la imagen y llama al frameloop que a su vez llama la función para dibujar el fondo.
 function loadMedia() {
@@ -25,6 +30,16 @@ function loadMedia() {
   fondo.src = 'space.jpg';
   fondo.onload = function(){
     var intervalo = window.setInterval(frameLoop, 1000 /55);
+  }
+}
+
+function dibujarEnemigos() {
+  for(var i in enemigos) {
+    var enemigo = enemigos[i];
+    ctx.save();
+    if(enemigo.estado == 'vivo') ctx.fillStyle = 'red';
+    if(enemigo.estado == 'muerto') ctx.fillStyle = 'black';
+    ctx.fillRect(enemigo.x, enemigo.y, enemigo.width, enemigo.height);
   }
 }
 
@@ -36,7 +51,7 @@ function dibujarFondo() {
 function dibujarNave() {
   //Guarda un punto en la pila del contexto(checkpoint, guarda la información actual que posee).
   ctx.save();
-  ctx.fillStyle= 'white'; //Pinta de blanco
+  ctx.fillStyle = 'white'; //Pinta de blanco
   ctx.fillRect(nave.x, nave.y, nave.width, nave.height );//Dibujamos un rectangulo(x,y,ancho,alto)
 }
 
@@ -84,6 +99,21 @@ function moverNave() {
   } else teclado.fire = false; // Si no esta precionada la tecla, que cancele la acción.
 }
 
+function actualizaEnemigos() {
+  if (juego.estado == 'iniciando') {
+    for (var i = 0; i < 10; i++) {
+      enemigos.push({
+        x:10 + (i*50),
+        y: 10,
+        height: 40,
+        width: 40,
+        estado: 'vivo'
+      });
+    }
+    juego.estado == 'jugando';
+  }
+}
+
 // 
 function moverDisparos() {
   //Este for recorre el arreglo de disparos.
@@ -124,8 +154,10 @@ function dibujarDisparos() {
 function frameLoop() {
   //Para actualizar la nave cada vez que se ejecuta un nuevo frame.
   moverNave();
+  actualizaEnemigos();
   moverDisparos();
   dibujarFondo();
+  dibujarEnemigos();
   dibujarDisparos();
   dibujarNave();
 }
