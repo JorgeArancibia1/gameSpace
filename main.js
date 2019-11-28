@@ -13,10 +13,10 @@ var fondo;
    width: 50,
    height: 50
  }
- //CREAMOS OBJETO TECLADO VACÍO
-var teclado = {
-
-}
+ //CREAMOS OBJETO TECLADO VACÍO.
+var teclado = {};
+//ARRAY PARA LOS DISPAROS.
+var disparos =[];
 
 
 // Trae la imagen y llama al frameloop que a su vez llama la función para dibujar el fondo.
@@ -24,7 +24,7 @@ function loadMedia() {
   fondo = new Image();
   fondo.src = 'space.jpg';
   fondo.onload = function(){
-    var intervalo = window.setInterval(frameLoop, 1000/55);
+    var intervalo = window.setInterval(frameLoop, 1000 /55);
   }
 }
 
@@ -54,7 +54,7 @@ function agregarEventosTeclado() {
 
   //Programamos la función agregarEventos
   function agregarEvento(elemento, nombreEvento, funcion) {
-    if (element.addEventListener) { //Si existe addEventListener utilizalo.
+    if (elemento.addEventListener) { //Si existe addEventListener utilizalo.
       elemento.addEventListener(nombreEvento,funcion,false); //Aquí se asigna el elemento al cual se va a escuchar, que evento se ejecutara, que es lo que hará cuando se accione el evento y que inicie el escucha en falso.
     } else if (elemento.attachEvent) { //Para que funcione en internet explorer.
       elemento.attachEvent(nombreEvento, funcion);
@@ -74,6 +74,49 @@ function moverNave() {
     nave.x += 6; // A la posición que tenga le vamos a quitar 10.
     if (nave.x > limite) nave.x = limite; // Para que no se salga del rango.
   }
+  //DISPAROS
+  if (teclado[32]) {
+    //
+    if (!teclado.fire) {
+      fire();
+      teclado.fire = true;
+    }
+  } else teclado.fire = false; // Si no esta precionada la tecla, que cancele la acción.
+}
+
+// 
+function moverDisparos() {
+  //Este for recorre el arreglo de disparos.
+  for(var i in disparos) {
+    var disparo = disparos[i];
+    disparo.y -= 2;
+  }
+  // Este filtro se encarga de eliminar del arreglo los disparos cuya coordenada en y hayan superado el tope del canvas que está en la coordenada 0.
+  // Si no se eliminan los disparos que se salen de la pantalla, se consume mucha memoria.
+  disparos = disparos.filter(function(disparo){
+    return disparo.y > 0;
+  });
+}
+
+//AGREGA UN OBJETO AL ARREGLO DE LOS DISPAROS
+function fire() {
+  disparos.push({
+    x: nave.x + 20,
+    y: nave.y - 10,
+    width: 10,
+    height:30
+  });
+}
+
+// CON ESTO MOSTRAMOS VISUALMENTE LOS DISPAROS, LOS DIBUJAMOS EN EL CANVAS.
+function dibujarDisparos() {
+  ctx.save(); // Salvamos la info actual del canvas.
+  ctx.fillStyle = 'white';
+  for(var i in disparos) {
+    var disparo = disparos[i];
+    ctx.fillRect(disparo.x, disparo.y, disparo.width, disparo.height); //Dibuja un rectangulo(x,y,ancho,alto)
+  } 
+  ctx.restore(); // Cuando terminemos la regresamos como la encontramos.
 }
 
 //Se encarga de actualizar todas las posiciones de los jugadores y va a redibujar cada
@@ -81,7 +124,9 @@ function moverNave() {
 function frameLoop() {
   //Para actualizar la nave cada vez que se ejecuta un nuevo frame.
   moverNave();
+  moverDisparos();
   dibujarFondo();
+  dibujarDisparos();
   dibujarNave();
 }
 
