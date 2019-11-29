@@ -1,5 +1,5 @@
 var canvas = document.getElementById('game');
-var ctx = canvas.getContext('2d'); 
+var ctx = canvas.getContext('2d');
 
 //IMAGENES
 var fondo;
@@ -13,13 +13,13 @@ var enemigos = [];
 
 
 // CREAR EL OBJETO DE LA NAVE
- var nave = {
-   x: 100,
-   y: canvas.height-100,//El alto del canvas - 100px
-   width: 50,
-   height: 50
- }
- 
+var nave = {
+  x: 100,
+  y: canvas.height - 100,//El alto del canvas - 100px
+  width: 50,
+  height: 50
+}
+
 var juego = {
   estado: 'iniciando'
 }
@@ -28,17 +28,17 @@ var juego = {
 function loadMedia() {
   fondo = new Image();
   fondo.src = 'space.jpg';
-  fondo.onload = function(){
-    var intervalo = window.setInterval(frameLoop, 1000 /55);
+  fondo.onload = function () {
+    var intervalo = window.setInterval(frameLoop, 1000 / 55);
   }
 }
 
 function dibujarEnemigos() {
-  for(var i in enemigos) {
+  for (let i in enemigos) {
     var enemigo = enemigos[i];
     ctx.save();
-    if(enemigo.estado == 'vivo') ctx.fillStyle = 'red';
-    if(enemigo.estado == 'muerto') ctx.fillStyle = 'black';
+    if (enemigo.estado == 'vivo') ctx.fillStyle = 'red';
+    if (enemigo.estado == 'muerto') ctx.fillStyle = 'black';
     ctx.fillRect(enemigo.x, enemigo.y, enemigo.width, enemigo.height);
   }
 }
@@ -52,25 +52,25 @@ function dibujarNave() {
   //Guarda un punto en la pila del contexto(checkpoint, guarda la información actual que posee).
   ctx.save();
   ctx.fillStyle = 'white'; //Pinta de blanco
-  ctx.fillRect(nave.x, nave.y, nave.width, nave.height );//Dibujamos un rectangulo(x,y,ancho,alto)
+  ctx.fillRect(nave.x, nave.y, nave.width, nave.height);//Dibujamos un rectangulo(x,y,ancho,alto)
 }
 
 function agregarEventosTeclado() {
   //Ejecutamos la función agregarEventos
   //Lo que hace esta en particular es agregar el numero de codigo de tecla al objeto "teclado" y lo va a colocar en "true" (teclado[32] = true;)
-  agregarEvento(document, "keydown", function(e){ //Agregamos al documento el evento keydown, que cuando se presione una tecla se ejecuta la función.
+  agregarEvento(document, "keydown", function (e) { //Agregamos al documento el evento keydown, que cuando se presione una tecla se ejecuta la función.
     teclado[e.keyCode] = true; //Va a tomar el objeto del teclado y va a agregar como clave del evento el keyCode("Codigo que identifica la tecla presionada").
   });//Es como representar "teclado.n = true"(tecla n° x encendida)
 
   //PARA DEJAR EN FALSO LA TECLA QUE DEJÓ DE SER PRESIONADA.
-  agregarEvento(document,"keyup", function(e) {
+  agregarEvento(document, "keyup", function (e) {
     teclado[e.keyCode] = false;
   });
 
   //Programamos la función agregarEventos
   function agregarEvento(elemento, nombreEvento, funcion) {
     if (elemento.addEventListener) { //Si existe addEventListener utilizalo.
-      elemento.addEventListener(nombreEvento,funcion,false); //Aquí se asigna el elemento al cual se va a escuchar, que evento se ejecutara, que es lo que hará cuando se accione el evento y que inicie el escucha en falso.
+      elemento.addEventListener(nombreEvento, funcion, false); //Aquí se asigna el elemento al cual se va a escuchar, que evento se ejecutara, que es lo que hará cuando se accione el evento y que inicie el escucha en falso.
     } else if (elemento.attachEvent) { //Para que funcione en internet explorer.
       elemento.attachEvent(nombreEvento, funcion);
     }
@@ -101,29 +101,41 @@ function moverNave() {
 
 function actualizaEnemigos() {
   if (juego.estado == 'iniciando') {
-    for (var i = 0; i < 10; i++) {
+    for (let i = 0; i < 10 ; i++) {
       enemigos.push({
-        x:10 + (i*50),
+        x: 10 + (i*50),
         y: 10,
         height: 40,
         width: 40,
-        estado: 'vivo'
+        estado: 'vivo',
+        contador: 0
       });
     }
-    juego.estado == 'jugando';
+    juego.estado = 'jugando';
+  }
+  for (let i in enemigos) {
+    var enemigo = enemigos[i];
+    if (!enemigo) continue; // Si no esta el enemigo, se va a saltar al siguiente paso del ciclo.
+    if (enemigo && enemigo.estado == 'vivo') { // Si el enemigo está vivo se va a mover.
+      enemigo.contador++;
+      //Formula de seno para que al aumentar el contador sea positivo y luego negativo.
+      enemigo.x += Math.sin(enemigo.contador * Math.PI /90)*5;
+    }
   }
 }
+
+
 
 // 
 function moverDisparos() {
   //Este for recorre el arreglo de disparos.
-  for(var i in disparos) {
+  for (var i in disparos) {
     var disparo = disparos[i];
     disparo.y -= 2;
   }
   // Este filtro se encarga de eliminar del arreglo los disparos cuya coordenada en y hayan superado el tope del canvas que está en la coordenada 0.
   // Si no se eliminan los disparos que se salen de la pantalla, se consume mucha memoria.
-  disparos = disparos.filter(function(disparo){
+  disparos = disparos.filter(function (disparo) {
     return disparo.y > 0;
   });
 }
@@ -134,7 +146,7 @@ function fire() {
     x: nave.x + 20,
     y: nave.y - 10,
     width: 10,
-    height:30
+    height: 30
   });
 }
 
@@ -142,10 +154,10 @@ function fire() {
 function dibujarDisparos() {
   ctx.save(); // Salvamos la info actual del canvas.
   ctx.fillStyle = 'white';
-  for(var i in disparos) {
+  for (var i in disparos) {
     var disparo = disparos[i];
     ctx.fillRect(disparo.x, disparo.y, disparo.width, disparo.height); //Dibuja un rectangulo(x,y,ancho,alto)
-  } 
+  }
   ctx.restore(); // Cuando terminemos la regresamos como la encontramos.
 }
 
