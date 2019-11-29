@@ -29,7 +29,7 @@ function loadMedia() {
   fondo = new Image();
   fondo.src = 'space.jpg';
   fondo.onload = function () {
-    var intervalo = window.setInterval(frameLoop, 1000 / 55);
+    var intervalo = window.setInterval(frameLoop, 800 / 55);
   }
 }
 
@@ -159,6 +159,27 @@ function dibujarDisparos() {
     ctx.fillRect(disparo.x, disparo.y, disparo.width, disparo.height); //Dibuja un rectangulo(x,y,ancho,alto)
   }
   ctx.restore(); // Cuando terminemos la regresamos como la encontramos.
+}
+
+function hit(a,b) {
+  var hit = false;
+  if (b.x + b.width >= a.x && b.x < a.x + a.width) {
+    if(b.y + b.height >= a.y && b.y < a.y + a.height) {
+      hit = true;
+    }
+  }
+
+  if (b.x <= a.x && b.x + b.width >= a.x + a.width) {
+    if (b.y <= a.y && b.y + b.height >= a.y + a.height) {
+      hit = true;
+    }
+  }
+
+  if (a.x <= b.x && a.x + a.width >= b.x + b.width) {
+    if (a.y <= b.y && a.y + a.height >= b.y + b.height) {
+      hit = true;
+    }
+  }
 }
 
 //Se encarga de actualizar todas las posiciones de los jugadores y va a redibujar cada
