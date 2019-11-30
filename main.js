@@ -8,6 +8,7 @@ var fondo;
 var teclado = {};
 //ARRAY PARA LOS DISPAROS.
 var disparos = [];
+var disparosEnemigos = [];
 //ARREGLO PARA ENEMIGOS.
 var enemigos = [];
 
@@ -29,12 +30,12 @@ function loadMedia() {
   fondo = new Image();
   fondo.src = 'space.jpg';
   fondo.onload = function () {
-    var intervalo = window.setInterval(frameLoop, 800 / 55);
+    var intervalo = window.setInterval(frameLoop, 1000 / 55);
   }
 }
 
 function dibujarEnemigos() {
-  for (let i in enemigos) {
+  for (var i in enemigos) {
     var enemigo = enemigos[i];
     ctx.save();
     if (enemigo.estado == 'vivo') ctx.fillStyle = 'red';
@@ -53,6 +54,7 @@ function dibujarNave() {
   ctx.save();
   ctx.fillStyle = 'white'; //Pinta de blanco
   ctx.fillRect(nave.x, nave.y, nave.width, nave.height);//Dibujamos un rectangulo(x,y,ancho,alto)
+  ctx.restore();
 }
 
 function agregarEventosTeclado() {
@@ -99,9 +101,39 @@ function moverNave() {
   } else teclado.fire = false; // Si no esta precionada la tecla, que cancele la acción.
 }
 
+function dibujarDisparosEnemigos() {
+  for (var i in disparosEnemigos) {
+    var disparo = disparosEnemigos[i];
+    ctx.save();
+    ctx.fillStyle = 'yellow';
+    ctx.fillRect(disparo.x, disparo.y, disparo.width, disparo.height);
+    ctx.restore();
+  }
+}
+
+function moverDisparosEnemigos() {
+  for (var i in disparosEnemigos) {
+    var disparo = disparosEnemigos[i];
+    disparo.y += 3;
+  }
+  disparosEnemigos = disparosEnemigos.filter(function(disparo){
+    return disparo.y < canvas.height
+  })
+}
+
 function actualizaEnemigos() {
+  function agregarDisparosEnemigos(enemigo){
+    return {
+      x: enemigo.x,
+      y: enemigo.y + 35,
+      width: 10,
+      height: 33,
+      contador: 0
+    }
+  }
+
   if (juego.estado == 'iniciando') {
-    for (let i = 0; i < 10 ; i++) {
+    for (var i = 0; i < 10 ; i++) {
       enemigos.push({
         x: 10 + (i*50),
         y: 10,
@@ -113,15 +145,32 @@ function actualizaEnemigos() {
     }
     juego.estado = 'jugando';
   }
-  for (let i in enemigos) {
+
+  for (var i in enemigos) {
     var enemigo = enemigos[i];
     if (!enemigo) continue; // Si no esta el enemigo, se va a saltar al siguiente paso del ciclo.
     if (enemigo && enemigo.estado == 'vivo') { // Si el enemigo está vivo se va a mover.
       enemigo.contador++;
       //Formula de seno para que al aumentar el contador sea positivo y luego negativo.
       enemigo.x += Math.sin(enemigo.contador * Math.PI /90)*5;
+
+      if (aleatorio(0,enemigos.length * 10) == 4) {
+        disparosEnemigos.push(agregarDisparosEnemigos(enemigo));
+      }
+    }
+
+    if (enemigo && enemigo.estado == 'hit') {
+      enemigo.contador++;
+      if (enemigo.contador >= 20) {
+        enemigo.estado = 'muerto';
+        enemigo.contador = 0;
+      }
     }
   }
+  enemigos = enemigos.filter(function(e){
+    if (enemigo && enemigo.estado != 'muerto') return true;
+    return false;
+  });
 }
 
 
@@ -131,7 +180,7 @@ function moverDisparos() {
   //Este for recorre el arreglo de disparos.
   for (var i in disparos) {
     var disparo = disparos[i];
-    disparo.y -= 2;
+    disparo.y -= 10;
   }
   // Este filtro se encarga de eliminar del arreglo los disparos cuya coordenada en y hayan superado el tope del canvas que está en la coordenada 0.
   // Si no se eliminan los disparos que se salen de la pantalla, se consume mucha memoria.
@@ -144,7 +193,7 @@ function moverDisparos() {
 function fire() {
   disparos.push({
     x: nave.x + 20,
-    y: nave.y - 10,
+    y: nave.y - 30,
     width: 10,
     height: 30
   });
@@ -163,23 +212,46 @@ function dibujarDisparos() {
 
 function hit(a,b) {
   var hit = false;
+  // El principio de A ¿está antes que el final de B? // ¿El final de A es mayor al principio de B?
   if (b.x + b.width >= a.x && b.x < a.x + a.width) {
     if(b.y + b.height >= a.y && b.y < a.y + a.height) {
       hit = true;
     }
   }
-
+  //PB <= PrincipioA && FB >= FinalA
   if (b.x <= a.x && b.x + b.width >= a.x + a.width) {
     if (b.y <= a.y && b.y + b.height >= a.y + a.height) {
       hit = true;
     }
   }
-
+  // PA <= PB && FA >= FB
   if (a.x <= b.x && a.x + a.width >= b.x + b.width) {
     if (a.y <= b.y && a.y + a.height >= b.y + b.height) {
       hit = true;
     }
   }
+  return hit;
+}
+
+function verificarContacto() {
+  for (var i in disparos) {
+    var disparo = disparos[i];
+    for(j in enemigos) {
+      var enemigo = enemigos[j];
+      if (hit(disparo,enemigo)) {
+        enemigo.estado = 'hit';
+        enemigo.contador = 0;
+        console.log('hubo contacto')
+      }
+    }
+  }
+}
+
+function aleatorio(inferior, superior) {
+  var posibilidades = superior - inferior;
+  var a = Math.random() * posibilidades;
+  a = Math.floor(a);
+  return parseInt(inferior) + a;
 }
 
 //Se encarga de actualizar todas las posiciones de los jugadores y va a redibujar cada
@@ -187,13 +259,16 @@ function hit(a,b) {
 function frameLoop() {
   //Para actualizar la nave cada vez que se ejecuta un nuevo frame.
   moverNave();
-  actualizaEnemigos();
   moverDisparos();
+  moverDisparosEnemigos();
   dibujarFondo();
+  verificarContacto();
+  actualizaEnemigos();
   dibujarEnemigos();
+  dibujarDisparosEnemigos();
   dibujarDisparos();
   dibujarNave();
-}
+} 
 
 
 //EJECUCIÓN DE FUNCIONES
