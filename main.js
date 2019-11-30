@@ -18,11 +18,18 @@ var nave = {
   x: 100,
   y: canvas.height - 100,//El alto del canvas - 100px
   width: 50,
-  height: 50
+  height: 50,
+  contador: 0
 }
 
 var juego = {
   estado: 'iniciando'
+}
+
+var textoRespuesta = {
+  contador: -1,
+  titulo: '',
+  subtitulo: ''
 }
 
 // Trae la imagen y llama al frameloop que a su vez llama la función para dibujar el fondo.
@@ -99,7 +106,20 @@ function moverNave() {
       teclado.fire = true;
     }
   } else teclado.fire = false; // Si no esta precionada la tecla, que cancele la acción.
+
+  if (nave.estado == 'hit') {
+    nave.contador++;
+    if (nave.contador >= 20) {
+      nave.contador = 0;
+      nave.estado = 'muerto';
+      juego.estado = 'perdido';
+      textoRespuesta.titulo = 'Game Over';
+      textoRespuesta.subtitulo = 'Presiona la tecla R para jugar denuevo.'
+      textoRespuesta.contador = 0;
+    }
+  }
 }
+
 
 function dibujarDisparosEnemigos() {
   for (var i in disparosEnemigos) {
@@ -210,6 +230,50 @@ function dibujarDisparos() {
   ctx.restore(); // Cuando terminemos la regresamos como la encontramos.
 }
 
+function dibujaTexto() {
+  if(textoRespuesta.contador == -1) return;
+  var alpha = textoRespuesta.contador/50.0;
+  if (alpha > 1) {
+    for(var i in enemigos) {
+      delete enemigos[i];
+    }
+  }
+  ctx.save();
+  // Permite dar un efecto para que letras aparescan de a poco.
+  ctx.globalAlpha = alpha;
+  if (juego.estado == 'perdido') {
+    ctx.fillStyle = 'white' ;
+    ctx.font = 'Bold 40pt Arial';
+    ctx.fillText(textoRespuesta.titulo, 160, 200);
+    ctx.font = '14pt Arial';
+    ctx.fillText(textoRespuesta.subtitulo, 170, 250);
+  }
+  if (juego.estado == 'victoria') {
+    ctx.fillStyle = 'white' ;
+    ctx.font = 'Bold 40pt Arial';
+    ctx.fillText(textoRespuesta.titulo, 80, 200);
+    ctx.font = '14pt Arial';
+    ctx.fillText(textoRespuesta.subtitulo, 90, 250);
+  }
+}
+
+function actualizarEstadoJuego() {
+  if (juego.estado == 'jugando' && enemigos.length == 0) {
+    juego.estado = 'victoria';
+    textoRespuesta.titulo = 'Derrotaste a los enemigos';
+    textoRespuesta.subtitulo = 'Presiona R para reiniciar';
+    textoRespuesta.contador = 0;
+  }
+  if (textoRespuesta.contador >= 0) {
+    textoRespuesta.contador++;
+  }
+  if ((juego.estado == 'perdido' || juego.estado == 'victoria') && teclado[82]) {
+    juego.estado = 'iniciando';
+    nave.estado = 'vivo';
+     textoRespuesta.contador = -1;
+  }
+}
+
 function hit(a,b) {
   var hit = false;
   // El principio de A ¿está antes que el final de B? // ¿El final de A es mayor al principio de B?
@@ -241,8 +305,15 @@ function verificarContacto() {
       if (hit(disparo,enemigo)) {
         enemigo.estado = 'hit';
         enemigo.contador = 0;
-        console.log('hubo contacto')
       }
+    } 
+  }
+  if (nave.estado == 'hit' || nave.estado == 'muerto') return ;
+  for (var i in disparosEnemigos) {
+    var disparo = disparosEnemigos[i];
+    if (hit(disparo, nave)) {
+      nave.estado = 'hit';
+      console.log('contacto')
     }
   }
 }
@@ -258,6 +329,7 @@ function aleatorio(inferior, superior) {
 // uno de los elementos del juego para el movimiento, además de dibujar el background.
 function frameLoop() {
   //Para actualizar la nave cada vez que se ejecuta un nuevo frame.
+  actualizarEstadoJuego();
   moverNave();
   moverDisparos();
   moverDisparosEnemigos();
@@ -267,6 +339,7 @@ function frameLoop() {
   dibujarEnemigos();
   dibujarDisparosEnemigos();
   dibujarDisparos();
+  dibujaTexto();
   dibujarNave();
 } 
 
