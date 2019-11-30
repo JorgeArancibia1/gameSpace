@@ -11,6 +11,41 @@ var disparos = [];
 var disparosEnemigos = [];
 //ARREGLO PARA ENEMIGOS.
 var enemigos = [];
+var imagenes = ['space.jpg']
+var preloader;
+
+
+function loadMedia() {
+  var preload = new createjs.LoadQueue();
+  // preload.addEventListener("fileload", progresoCarga);
+  preload.loadFile("./mono.png");
+}
+
+// function loadMedia() {
+//   preload = new createjs.LoadQueue();
+//   // preload.onProgress = progresoCarga;
+//   preload.addEventListener("fileload", progresoCarga);
+//   cargar();
+// }
+
+
+// function cargar() {
+//   while (imagenes.length > 0) {
+//     // var imagen = imagenes.shift();
+//     fondo = preload.loadFile("mono.png");
+//     // preloader.loadFile(imagen);
+//   }
+// }
+
+// function progresoCarga(event) {
+//   document.body.appendChild(event.result);
+//   console.log(parseInt(preloader.progress * 100 )+"%");
+//   if (preloader.progress == 1) {
+//     var interval = windows.setInterval(frameLoop, 1000/55);
+//     // fondo = new Image();
+//     // fondo.src = 'space.jpg';
+//   }
+// }
 
 
 // CREAR EL OBJETO DE LA NAVE
@@ -33,13 +68,13 @@ var textoRespuesta = {
 }
 
 // Trae la imagen y llama al frameloop que a su vez llama la función para dibujar el fondo.
-function loadMedia() {
-  fondo = new Image();
-  fondo.src = 'space.jpg';
-  fondo.onload = function () {
-    var intervalo = window.setInterval(frameLoop, 1000 / 55);
-  }
-}
+// function loadMedia() {
+//   fondo = new Image();
+//   fondo.src = 'space.jpg';
+//   fondo.onload = function () {
+//     var intervalo = window.setInterval(frameLoop, 1000 / 55);
+//   }
+// }
 
 function dibujarEnemigos() {
   for (var i in enemigos) {
@@ -347,3 +382,11 @@ function frameLoop() {
 //EJECUCIÓN DE FUNCIONES
 loadMedia();
 agregarEventosTeclado();
+
+///////////////////////////////
+
+window.addEventListener('load', init);
+function init() {
+  agregarEventosTeclado();
+  loadMedia();
+}
