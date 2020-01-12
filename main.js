@@ -11,41 +11,6 @@ var disparos = [];
 var disparosEnemigos = [];
 //ARREGLO PARA ENEMIGOS.
 var enemigos = [];
-var imagenes = ['space.jpg']
-var preloader;
-
-
-function loadMedia() {
-  var preload = new createjs.LoadQueue();
-  // preload.addEventListener("fileload", progresoCarga);
-  preload.loadFile("./mono.png");
-}
-
-// function loadMedia() {
-//   preload = new createjs.LoadQueue();
-//   // preload.onProgress = progresoCarga;
-//   preload.addEventListener("fileload", progresoCarga);
-//   cargar();
-// }
-
-
-// function cargar() {
-//   while (imagenes.length > 0) {
-//     // var imagen = imagenes.shift();
-//     fondo = preload.loadFile("mono.png");
-//     // preloader.loadFile(imagen);
-//   }
-// }
-
-// function progresoCarga(event) {
-//   document.body.appendChild(event.result);
-//   console.log(parseInt(preloader.progress * 100 )+"%");
-//   if (preloader.progress == 1) {
-//     var interval = windows.setInterval(frameLoop, 1000/55);
-//     // fondo = new Image();
-//     // fondo.src = 'space.jpg';
-//   }
-// }
 
 
 // CREAR EL OBJETO DE LA NAVE
@@ -68,20 +33,20 @@ var textoRespuesta = {
 }
 
 // Trae la imagen y llama al frameloop que a su vez llama la función para dibujar el fondo.
-// function loadMedia() {
-//   fondo = new Image();
-//   fondo.src = 'space.jpg';
-//   fondo.onload = function () {
-//     var intervalo = window.setInterval(frameLoop, 1000 / 55);
-//   }
-// }
+function loadMedia() {
+  fondo = new Image();
+  fondo.src = 'space.jpg';
+  fondo.onload = function () {
+    var intervalo = window.setInterval(frameLoop, 1000 / 55);
+  }
+}
 
 function dibujarEnemigos() {
   for (var i in enemigos) {
     var enemigo = enemigos[i];
     ctx.save();
     if (enemigo.estado == 'vivo') ctx.fillStyle = 'red';
-    if (enemigo.estado == 'muerto') ctx.fillStyle = 'black';
+    if (enemigo.estado == 'muerto') ctx.fillStyle = 'transparent';
     ctx.fillRect(enemigo.x, enemigo.y, enemigo.width, enemigo.height);
   }
 }
@@ -169,7 +134,7 @@ function dibujarDisparosEnemigos() {
 function moverDisparosEnemigos() {
   for (var i in disparosEnemigos) {
     var disparo = disparosEnemigos[i];
-    disparo.y += 3;
+    disparo.y += 6;
   }
   disparosEnemigos = disparosEnemigos.filter(function(disparo){
     return disparo.y < canvas.height
@@ -188,9 +153,10 @@ function actualizaEnemigos() {
   }
 
   if (juego.estado == 'iniciando') {
+    // ESTO DEFINE CUANTAS NAVES HABRÁ
     for (var i = 0; i < 10 ; i++) {
       enemigos.push({
-        x: 10 + (i*50),
+        x: 10 + (i*50),// Esto ve la separación de naves enemigas.
         y: 10,
         height: 40,
         width: 40,
@@ -206,17 +172,20 @@ function actualizaEnemigos() {
     if (!enemigo) continue; // Si no esta el enemigo, se va a saltar al siguiente paso del ciclo.
     if (enemigo && enemigo.estado == 'vivo') { // Si el enemigo está vivo se va a mover.
       enemigo.contador++;
+      
       //Formula de seno para que al aumentar el contador sea positivo y luego negativo.
       enemigo.x += Math.sin(enemigo.contador * Math.PI /90)*5;
 
-      if (aleatorio(0,enemigos.length * 10) == 4) {
+
+      // PARA DISPARAR ALEATORIAMENTE
+      if (aleatorio(0,enemigos.length * 20) == 4) {
         disparosEnemigos.push(agregarDisparosEnemigos(enemigo));
       }
     }
 
     if (enemigo && enemigo.estado == 'hit') {
       enemigo.contador++;
-      if (enemigo.contador >= 20) {
+      if (enemigo.contador >= 1) {
         enemigo.estado = 'muerto';
         enemigo.contador = 0;
       }
@@ -267,7 +236,7 @@ function dibujarDisparos() {
 
 function dibujaTexto() {
   if(textoRespuesta.contador == -1) return;
-  var alpha = textoRespuesta.contador/50.0;
+  var alpha = textoRespuesta.contador;
   if (alpha > 1) {
     for(var i in enemigos) {
       delete enemigos[i];
@@ -335,20 +304,19 @@ function hit(a,b) {
 function verificarContacto() {
   for (var i in disparos) {
     var disparo = disparos[i];
-    for(j in enemigos) {
+    for(var j in enemigos) {
       var enemigo = enemigos[j];
-      if (hit(disparo,enemigo)) {
+      if ( hit(disparo,enemigo)) {
         enemigo.estado = 'hit';
-        enemigo.contador = 0;
+        enemigo.contador++;
       }
     } 
   }
   if (nave.estado == 'hit' || nave.estado == 'muerto') return ;
   for (var i in disparosEnemigos) {
-    var disparo = disparosEnemigos[i];
-    if (hit(disparo, nave)) {
+    var disparoEnemigo = disparosEnemigos[i];
+    if (hit(disparoEnemigo, nave)) {
       nave.estado = 'hit';
-      console.log('contacto')
     }
   }
 }
@@ -382,11 +350,3 @@ function frameLoop() {
 //EJECUCIÓN DE FUNCIONES
 loadMedia();
 agregarEventosTeclado();
-
-///////////////////////////////
-
-window.addEventListener('load', init);
-function init() {
-  agregarEventosTeclado();
-  loadMedia();
-}
