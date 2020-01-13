@@ -185,13 +185,13 @@ function actualizaEnemigos() {
 
     if (enemigo && enemigo.estado == 'hit') {
       enemigo.contador++;
-      if (enemigo.contador >= 1) {
+      if (enemigo.contador >= 20) {
         enemigo.estado = 'muerto';
         enemigo.contador = 0;
       }
     }
   }
-  enemigos = enemigos.filter(function(e){
+  enemigos = enemigos.filter(function(enemigo){
     if (enemigo && enemigo.estado != 'muerto') return true;
     return false;
   });
