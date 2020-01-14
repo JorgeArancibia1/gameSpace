@@ -1,8 +1,11 @@
 var canvas = document.getElementById('game');
 var ctx = canvas.getContext('2d');
 
-//IMAGENES
-var fondo;
+//Definir variables para las imagenes
+var fondo, imgNave, imgEnemigo, imgDisparo, imgDisparoEnemigo;
+var imagenes = ['monster.png','mono.png','enemyLaser.png','laser.png','space.jpg']; // Se declara un arreglo de imagenes.
+var soundShoot,soundInvaderShoot,soundDeadSpace,soundDeadInvader,soundEndGame; // Se declaran variables para alojar los sonidos.
+var preloader;
 
 //CREAMOS OBJETO TECLADO VACÍO.
 var teclado = {};
@@ -34,10 +37,58 @@ var textoRespuesta = {
 
 // Trae la imagen y llama al frameloop que a su vez llama la función para dibujar el fondo.
 function loadMedia() {
-  fondo = new Image();
-  fondo.src = 'space.jpg';
-  fondo.onload = function () {
-    var intervalo = window.setInterval(frameLoop, 1000 / 55);
+  preloader = new PreloadJS();
+  preloader.onProgress = progresoCarga;
+  cargar();
+}
+
+function cargar(){
+  while(imagenes.length > 0){
+     var imagen = imagenes.shift();
+     preloader.loadFile(imagen);
+  }
+}
+
+function progresoCarga(){
+  if(preloader.progress == 1){
+    var interval = window.setInterval(frameLoop,5000/50);
+
+    //IMAGENES
+    fondo = new Image();
+    fondo.src = 'space.jpg';
+
+    imgNave = new Image();
+    imgNave.src = 'mono.png';
+
+    imgEnemigo = new Image();
+    imgEnemigo.src = 'monster.png';
+
+    imgDisparo = new Image();
+    imgDisparo.src = 'laser.png';
+
+    imgDisparoEnemigo = new Image();
+    imgDisparoEnemigo.src = 'enemyLaser.png';
+
+    //AUDIOS
+    soundShoot = document.createElement('audio'); // Se crea la etiqueta.
+    document.body.appendChild(soundShoot); // Coloca el sonido como hijo del body.
+    soundShoot.setAttribute('src','laserSpace.mp3'); // Le coloca un atributo y su valor a la etiqueta creada audio.
+    
+    soundInvaderShoot = document.createElement('audio');
+    document.body.appendChild(soundInvaderShoot);
+    soundInvaderShoot.setAttribute('src','laserAlien.mp3');
+
+    soundDeadSpace = document.createElement('audio');
+    document.body.appendChild(soundDeadSpace);
+    soundDeadSpace.setAttribute('src','deadspaceShip.mp3');
+
+    soundDeadInvader = document.createElement('audio');
+    document.body.appendChild(soundDeadInvader);
+    soundDeadInvader.setAttribute('src','deadInvader.mp3');
+
+    soundEndGame = document.createElement('audio');
+    document.body.appendChild(soundEndGame);
+    soundEndGame.setAttribute('src','endGame.mp3');
   }
 }
 
@@ -45,9 +96,9 @@ function dibujarEnemigos() {
   for (var i in enemigos) {
     var enemigo = enemigos[i];
     ctx.save();
-    if (enemigo.estado == 'vivo') ctx.fillStyle = 'red';
-    if (enemigo.estado == 'muerto') ctx.fillStyle = 'transparent';
-    ctx.fillRect(enemigo.x, enemigo.y, enemigo.width, enemigo.height);
+    if (enemigo.estado == 'vivo') ctx.fillStyle = 'red'; //
+    if (enemigo.estado == 'muerto') ctx.fillStyle = 'transparent'; //
+    ctx.drawImage(imgEnemigo, enemigo.x, enemigo.y, enemigo.width, enemigo.height);
   }
 }
 
@@ -59,8 +110,7 @@ function dibujarFondo() {
 function dibujarNave() {
   //Guarda un punto en la pila del contexto(checkpoint, guarda la información actual que posee).
   ctx.save();
-  ctx.fillStyle = 'white'; //Pinta de blanco
-  ctx.fillRect(nave.x, nave.y, nave.width, nave.height);//Dibujamos un rectangulo(x,y,ancho,alto)
+  ctx.drawImage(imgNave,nave.x,nave.y,nave.width,nave.height);
   ctx.restore();
 }
 
@@ -120,13 +170,12 @@ function moverNave() {
   }
 }
 
-
 function dibujarDisparosEnemigos() {
   for (var i in disparosEnemigos) {
     var disparo = disparosEnemigos[i];
     ctx.save();
     ctx.fillStyle = 'yellow';
-    ctx.fillRect(disparo.x, disparo.y, disparo.width, disparo.height);
+    ctx.drawImage(imgDisparoEnemigo,disparo.x, disparo.y,disparo.width,disparo.height);
     ctx.restore();
   }
 }
@@ -179,6 +228,9 @@ function actualizaEnemigos() {
 
       // PARA DISPARAR ALEATORIAMENTE
       if (aleatorio(0,enemigos.length * 20) == 4) {
+        soundInvaderShoot.pause();
+        soundInvaderShoot.currentTime = 0;
+        soundInvaderShoot.play();
         disparosEnemigos.push(agregarDisparosEnemigos(enemigo));
       }
     }
@@ -197,8 +249,6 @@ function actualizaEnemigos() {
   });
 }
 
-
-
 // 
 function moverDisparos() {
   //Este for recorre el arreglo de disparos.
@@ -215,6 +265,10 @@ function moverDisparos() {
 
 //AGREGA UN OBJETO AL ARREGLO DE LOS DISPAROS
 function fire() {
+  soundShoot.pause();
+  soundShoot.currentTime = 0;
+  soundShoot.play();
+
   disparos.push({
     x: nave.x + 20,
     y: nave.y - 30,
@@ -226,10 +280,10 @@ function fire() {
 // CON ESTO MOSTRAMOS VISUALMENTE LOS DISPAROS, LOS DIBUJAMOS EN EL CANVAS.
 function dibujarDisparos() {
   ctx.save(); // Salvamos la info actual del canvas.
-  ctx.fillStyle = 'white';
+  //ctx.fillStyle = 'white';
   for (var i in disparos) {
     var disparo = disparos[i];
-    ctx.fillRect(disparo.x, disparo.y, disparo.width, disparo.height); //Dibuja un rectangulo(x,y,ancho,alto)
+    ctx.drawImage(imgDisparo,disparo.x, disparo.y,disparo.width,disparo.height);
   }
   ctx.restore(); // Cuando terminemos la regresamos como la encontramos.
 }
@@ -316,6 +370,10 @@ function verificarContacto() {
   for (var i in disparosEnemigos) {
     var disparoEnemigo = disparosEnemigos[i];
     if (hit(disparoEnemigo, nave)) {
+      soundDeadInvader.pause();
+      soundDeadInvader.currentTime = 0;
+      soundDeadInvader.play();
+
       nave.estado = 'hit';
     }
   }
@@ -348,5 +406,9 @@ function frameLoop() {
 
 
 //EJECUCIÓN DE FUNCIONES
-loadMedia();
-agregarEventosTeclado();
+window.addEventListener('load',init);
+
+function init(){
+    agregarEventosTeclado();
+    loadMedia();
+}
